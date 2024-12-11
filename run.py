@@ -3,9 +3,9 @@ from src.menu import *
 #Create Window
 
 pygame.init()
-width = 1280
-height = 720
-screen = pygame.display.set_mode((width, height))
+width = 1920
+height = 1080
+screen = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
 pygame.display.set_caption("Worms Math")
 main_menu(screen)
 pygame.quit()

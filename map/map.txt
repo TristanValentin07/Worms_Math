@@ -1,1 +1,1 @@
-texture/game/dirt.jpg,1280,500,0,500
+texture/game/dirt.jpg,1920,600,0,500

@@ -21,10 +21,12 @@ class DestructibleBlock:
         pygame.draw.circle(self.surface, (0, 0, 0, 0), local_center, radius)
 
 def game_loop(screen):
+    #import local
+    from src.menu import main_menu
     # Charger l'arrière-plan
     game_background = pygame.image.load("texture/game/game_background.jpeg").convert_alpha()
-    game_background = pygame.transform.scale(game_background, (1280, 720))
-
+    game_background = pygame.transform.scale(game_background, (1920, 1080))
+    
     # Charger la carte
     map_file = "map/map.txt"
     map_data = load_map(map_file)
@@ -55,6 +57,9 @@ def game_loop(screen):
                 for block in maps:
                     if block.rect.collidepoint(mouse_pos):  # Vérifier si le clic est sur un bloc
                         block.destroy_area(mouse_pos, radius=50)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    main_menu(screen)
 
         # Dessiner l'arrière-plan
         screen.blit(game_background, (0, 0))
