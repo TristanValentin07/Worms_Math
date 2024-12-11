@@ -1,0 +1,1 @@
+texture/game/dirt.jpg,1280,500,0,500
