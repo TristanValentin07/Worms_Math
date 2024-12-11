@@ -5,30 +5,51 @@ import pygame_menu as pm
 global user_name
 
 def main_menu(screen):
-
-    #Windows Settings
+    # Window Settings
     width, height = screen.get_size()
-    menu = pm.Menu('Worms_Math', width, height, theme=pm.themes.THEME_DARK)
 
-    #State variable
-    menu_running = True
+    # Import background
+    menu_background = pygame.image.load("texture/menu/background.png")
+    menu_background = pygame.transform.scale(menu_background, (1280, 720))
 
-    #Buttons
+    #Theme transparent
+    # Create a custom theme with transparent background
+    custom_theme = pm.Theme(
+        background_color=(0, 0, 0, 0),  # Fully transparent
+        title=False,
+        widget_offset=(0, 400),
+        widget_margin=(0, 10),
+        widget_font_color=(255, 165, 0),
+    )
+
+    # Create the menu
+    menu = pm.Menu('', width, height, theme=custom_theme)
+
+    # Add buttons to the menu
+    menu.add.button('Play', pm.events.NONE, screen)
+    menu.add.button('Options', pm.events.NONE, screen)
     menu.add.button('Quit', pm.events.EXIT, screen)
 
-
-    #Menu loop
+    # Menu loop
+    menu_running = True
     while menu_running:
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-        
-        # Update screen infos
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+
+        # Draw the background first
+        screen.blit(menu_background, (0, 0))
+
+        # Draw the menu (buttons on top of the background)
         if menu.is_enabled():
             menu.update(events)
             menu.draw(screen)
 
-        #Update Frames
-        pygame.display.update()
+        # Update the display
+        pygame.display.flip()
