@@ -1,0 +1,2 @@
+import pygame
+print("Pygame fonctionne ! Version :", pygame.__version__)
