@@ -1,39 +1,30 @@
-import sys
-import pygame
-
 def load_map(file_path):
-    """
-    Charge une carte à partir d'un fichier texte et retourne une liste de blocs.
-    """
     blocks = []
-
     try:
         with open(file_path, "r") as file:
             lines = file.readlines()
             for line in lines:
-                # Supprimer les espaces ou sauts de ligne
                 line = line.strip()
-
-                # Ignorer les lignes vides
                 if not line:
                     continue
-
-                # Découper les paramètres
-                material, width, height, x, y = line.split(",")
-                width, height, x, y = int(width), int(height), int(x), int(y)
-
-                # Ajouter un dictionnaire représentant le bloc
+                # Split line into components
+                parts = line.split(",")
+                if len(parts) != 5:
+                    print(f"Error: Malformed line: {line}")
+                    continue
+                material, width, height, x, y = parts
+                # Mark "dirt.jpeg" blocks as indestructible
+                destructible = "dirt.jpeg" not in material
                 blocks.append({
                     "material": material,
-                    "width": width,
-                    "height": height,
-                    "x": x,
-                    "y": y
+                    "width": int(width),
+                    "height": int(height),
+                    "x": int(x),
+                    "y": int(y),
+                    "destructible": destructible  # Add destructible flag
                 })
-
     except FileNotFoundError:
-        print(f"Erreur : le fichier {file_path} est introuvable.")
+        print(f"Error: File {file_path} not found.")
     except ValueError as e:
-        print(f"Erreur de formatage dans le fichier : {e}")
-
+        print(f"Error: {e}")
     return blocks
