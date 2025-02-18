@@ -1,5 +1,29 @@
-# created by virtualenv automatically
-.venv/Lib
 __pycache__/
-.idea
+*.py[cod]
+*.pyo
+*.pyd
 
+venv/
+.env/
+.venv/
+
+*.egg-info/
+dist/
+build/
+pip-wheel-metadata/
+
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+*.swp
+
+*.tmp
+*.bak
+*.log
+*.~
+
+.env
+*.key
+*.pem
