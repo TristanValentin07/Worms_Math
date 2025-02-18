@@ -3,6 +3,8 @@ import pygame
 import time
 from .map_loader import *
 
+NUM_PLAYERS = 4 # Nombre de joueurs de 1 à 4
+
 class DestructibleBlock:
     def __init__(self, material, width, height, x, y):
         self.surface = pygame.Surface((width, height), pygame.SRCALPHA)
@@ -19,32 +21,37 @@ class DestructibleBlock:
         pygame.draw.circle(self.surface, (0, 0, 0, 0), local_center, radius)
 
 class PlayerManager:
-    # Configuration des contrôles partagée entre les joueurs
-    CONTROLS = {
+
+    controls = {
         'left': pygame.K_q,
         'right': pygame.K_d,
         'jump': pygame.K_z
     }
-    
-    # Couleurs prédéfinies pour les joueurs
-    COLORS = [
+
+    def get_controls(self):
+        return self.controls
+
+    colors = [
         (255, 0, 0),    # Rouge
         (0, 0, 255),    # Bleu
         (0, 255, 0),    # Vert
         (255, 255, 0),  # Jaune
-        (255, 0, 255),  # Magenta
-        (0, 255, 255),  # Cyan
     ]
+    
+    def get_colors(self):
+        return self.colors
     
     def __init__(self, num_players):
         self.players = []
-        screen_width = 1920  # Largeur de l'écran
-        
-        # Création des joueurs avec espacement régulier
+        screen_width = 1920
+
+        controls = self.get_controls()
+        colors = self.get_colors()
+
         for i in range(num_players):
             x_pos = (screen_width / (num_players + 1)) * (i + 1)
-            color = self.COLORS[i % len(self.COLORS)]
-            self.players.append(Player(x_pos, 300, color, self.CONTROLS))
+            color = colors[i % len(colors)]
+            self.players.append(Player(x_pos, 300, color, controls))
             
         self.current_player_index = 0
         self.last_switch = time.time()
@@ -113,9 +120,6 @@ class Player:
 def game_loop(screen):
     from .menu import main_menu
     
-    # Définir le nombre de joueurs ici
-    NUM_PLAYERS = 4  # Vous pouvez modifier cette valeur selon vos besoins
-    
     clock = pygame.time.Clock()
     game_background = pygame.image.load("texture/game/game_background.jpeg").convert_alpha()
     game_background = pygame.transform.scale(game_background, (1920, 1080))
@@ -135,7 +139,6 @@ def game_loop(screen):
             )
         )
 
-    # Initialiser le gestionnaire de joueurs
     player_manager = PlayerManager(NUM_PLAYERS)
     font = pygame.font.Font(None, 36)
 
@@ -161,7 +164,7 @@ def game_loop(screen):
                     main_menu(screen)
 
         current_player.move(maps, dt)
-        
+
         for player in player_manager.get_list_players():
             player.gravityAndCollision(maps, dt)
         
@@ -172,7 +175,7 @@ def game_loop(screen):
 
         player_manager.draw_players(screen)
 
-        # Afficher le temps restant et le joueur actif
+        # Affichage
         time_text = font.render(f"Temps restant: {int(time_left)}s", True, (255, 255, 255))
         player_text = font.render(
             f"Tour du Joueur {player_manager.current_player_index + 1}", 
