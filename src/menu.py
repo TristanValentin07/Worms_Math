@@ -22,38 +22,22 @@ def main_menu(screen):
     )
 
     # Create the menu
-    menu = pm.Menu('', 1920, 1080, theme=custom_theme, center_content=False)
+    screen_width, screen_height = screen.get_size()
+    menu = pm.Menu(
+        title='',
+        width=screen_width,
+        height=screen_height,
+        theme=custom_theme,
+        center_content=False
+    )
 
     def start_game():
-        menu_running = False
-        game_loop(screen)  # Démarre la boucle de jeu
+        game_loop(screen)  # Start the game loop
 
     # Add buttons to the menu
     menu.add.button('Play', start_game)
     menu.add.button('Options', lambda: options_menu(screen))
     menu.add.button('Quit', pm.events.EXIT, screen)
 
-    # Menu loop
-    menu_running = True
-
-    while menu_running:
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
-
-        # Draw the background first
-        screen.blit(menu_background, (0, 0))
-
-        # Draw the menu (buttons on top of the background)
-        if menu.is_enabled():
-            menu.update(events)
-            menu.draw(screen)
-
-        # Update the display
-        pygame.display.flip()
+    # Main menu loop
+    menu.mainloop(screen, bgfun=lambda: screen.blit(menu_background, (0, 0)))
