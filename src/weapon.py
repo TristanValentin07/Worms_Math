@@ -17,12 +17,20 @@ class RocketProjectile:
         self.vy += gravity * dt
         self.x += self.vx * dt
         self.y += self.vy * dt
+        rocket_surf = pygame.Surface((5, 5), pygame.SRCALPHA)
+        pygame.draw.circle(rocket_surf, (255,255,255), (2,2), 2)
+        rocket_mask = pygame.mask.from_surface(rocket_surf)
         proj_rect = pygame.Rect(int(self.x), int(self.y), 5, 5)
+
         for block in blocks:
             if proj_rect.colliderect(block.rect):
-                self.explode(players)
-                self.exploded = True
-                break
+                offset_x = proj_rect.x - block.rect.x
+                offset_y = proj_rect.y - block.rect.y
+                overlap = block.mask.overlap(rocket_mask, (offset_x, offset_y))
+                if overlap:
+                    self.explode(players)
+                    self.exploded = True
+                    break
 
     def explode(self, players):
         for p in players:
@@ -32,12 +40,10 @@ class RocketProjectile:
             if dist < self.explosion_radius:
                 if hasattr(p, 'health'):
                     p.health -= 20
-
                 force = max(0, self.explosion_radius - dist)
                 angle = math.atan2(dy, dx)
                 knock_x = math.cos(angle) * force
                 knock_y = math.sin(angle) * force * 0.5
-
                 p.x += knock_x
                 p.y += knock_y
                 if hasattr(p, 'hitbox'):
@@ -46,7 +52,7 @@ class RocketProjectile:
 
     def draw(self, screen):
         if not self.exploded:
-            pygame.draw.circle(screen, (255, 0, 0), (int(self.x), int(self.y)), 10)
+            pygame.draw.circle(screen, (255, 0, 0), (int(self.x), int(self.y)), 5)
 
 
 class RocketWeapon:
@@ -64,15 +70,12 @@ class RocketWeapon:
     def handle_event(self, event, blocks, players):
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
-
             if self.button_rect.collidepoint(mouse_pos):
                 self.selected = True
                 self.show_deselect = True
-
             if self.show_deselect and self.deselect_rect.collidepoint(mouse_pos):
                 self.selected = False
                 self.show_deselect = False
-
             if self.selected and event.button == 1:
                 self.shoot(blocks, players)
 
@@ -84,7 +87,7 @@ class RocketWeapon:
         py = self.player_ref.y
 
         angle = math.atan2((my - py), (mx - px))
-        speed =15
+        speed = 15
         rocket = RocketProjectile(px, py, angle, speed)
         self.projectiles.append(rocket)
 
@@ -93,12 +96,12 @@ class RocketWeapon:
             if rocket.exploded:
                 rx, ry = int(rocket.x), int(rocket.y)
                 self.projectiles.remove(rocket)
+
                 for block in maps:
                     if block.rect.collidepoint(rx, ry):
                         block.destroy_area((rx, ry), radius=50)
             else:
                 rocket.update(dt, blocks, players)
-
 
     def draw_ui(self, screen):
         self.button_rect = pygame.Rect(120, 50, 150, 60)
@@ -116,10 +119,10 @@ class RocketWeapon:
             dtext = font.render("Deselect", True, (0, 0, 0))
             screen.blit(dtext, (self.deselect_rect.x + 10, self.deselect_rect.y + 20))
 
-
     def draw_projectiles(self, screen):
         for rocket in self.projectiles:
             rocket.draw(screen)
+
         if self.selected and self.player_ref:
             mx, my = pygame.mouse.get_pos()
             px = self.player_ref.x
