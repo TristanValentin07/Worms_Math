@@ -100,6 +100,7 @@ class RocketWeapon:
                 for block in maps:
                     if block.rect.collidepoint(rx, ry):
                         block.destroy_area((rx, ry), radius=50)
+                        print("destroy")
             else:
                 rocket.update(dt, blocks, players)
 

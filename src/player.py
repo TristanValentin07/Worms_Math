@@ -118,8 +118,14 @@ class PlayerManager:
         return self.players[self.current_player_index]
 
     def draw_players(self, screen):
+        font = pygame.font.SysFont(None, 24)
+
         for i, player in enumerate(self.players):
             if i == self.current_player_index:
-                pygame.draw.circle(screen, (255, 0, 0), (player.x + 25, player.y - 10), 10)  # Indicateur du joueur actif
+                pygame.draw.circle(screen, (255, 0, 0),
+                                (int(player.x + 25), int(player.y - 10)), 10)
             screen.blit(player.sprites[player.current_sprite], (player.x, player.y))
             player.draw_hitbox(screen)
+            health_text = font.render(str(player.health), True, (255, 255, 255))  # texte blanc
+            text_rect = health_text.get_rect(center=(int(player.x + 25), int(player.y - 20)))
+            screen.blit(health_text, text_rect)

@@ -2,11 +2,7 @@ import sys
 import pygame
 
 def load_map(file_path):
-    """
-    Charge une carte à partir d'un fichier texte et retourne une liste de blocs.
-    """
     blocks = []
-
     try:
         with open(file_path, "r") as file:
             lines = file.readlines()

@@ -2,7 +2,8 @@ import sys
 import pygame
 from src.map_loader import *
 from src.player import *
-from src.weapon import *
+from src.rocket import RocketWeapon
+from src.grenade import GrenadeWeapon
 
 class DestructibleBlock:
     def __init__(self, material, width, height, x, y):
@@ -47,9 +48,13 @@ def game_loop(screen, num_players):
                 block_data["y"]
             )
         )
-    from src.weapon import RocketWeapon
+    
+    grenade_weapon = GrenadeWeapon()
     rocket_weapon = RocketWeapon()
+    current_weapon = grenade_weapon
+    
     if all_players:
+        grenade_weapon.attach_to_player(all_players[0])
         rocket_weapon.attach_to_player(all_players[0])
 
     clock = pygame.time.Clock()
@@ -68,13 +73,24 @@ def game_loop(screen, num_players):
                 if event.key == pygame.K_ESCAPE:
                     main_menu(screen)
                 if event.key == pygame.K_t:
+                    grenade_weapon.selected = False
                     rocket_weapon.selected = False
+                    grenade_weapon.show_deselect = False
                     rocket_weapon.show_deselect = False
                     player_manager.switch_turn()
                     new_player = player_manager.get_current_player()
+                    grenade_weapon.attach_to_player(new_player)
                     rocket_weapon.attach_to_player(new_player)
-
-            rocket_weapon.handle_event(event, maps, all_players)
+                if event.key == pygame.K_3:
+                    grenade_weapon.selected = True
+                    rocket_weapon.selected = False
+                    current_weapon = grenade_weapon
+                if event.key == pygame.K_2:
+                    grenade_weapon.selected = False
+                    rocket_weapon.selected = True
+                    current_weapon = rocket_weapon
+            
+            current_weapon.handle_event(event, maps, all_players)
 
         current_player = player_manager.get_current_player()
         keys = pygame.key.get_pressed()
@@ -86,12 +102,15 @@ def game_loop(screen, num_players):
             current_player.jump()
 
         current_player.apply_gravity(maps)
+        grenade_weapon.update(dt, maps, all_players,maps)
         rocket_weapon.update(dt, maps, all_players, maps)
 
         screen.blit(game_background, (0, 0))
         player_manager.draw_players(screen)
         for block in maps:
             block.draw(screen)
+        grenade_weapon.draw_ui(screen)
         rocket_weapon.draw_ui(screen)
+        grenade_weapon.draw_projectiles(screen)
         rocket_weapon.draw_projectiles(screen)
         pygame.display.update()
