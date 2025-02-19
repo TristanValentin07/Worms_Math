@@ -2,7 +2,7 @@ import math
 import pygame
 
 class RocketProjectile:
-    def __init__(self, x, y, angle, speed=10):
+    def __init__(self, x, y, angle, speed=10, gravity=0.4):
         self.x = float(x)
         self.y = float(y)
         self.angle = angle
@@ -11,10 +11,10 @@ class RocketProjectile:
         self.vy = math.sin(self.angle) * self.speed
         self.exploded = False
         self.explosion_radius = 30
+        self.gravity = gravity
 
     def update(self, dt, blocks, players):
-        gravity = 0.4
-        self.vy += gravity * dt
+        self.vy += self.gravity * dt
         self.x += self.vx * dt
         self.y += self.vy * dt
         proj_rect = pygame.Rect(int(self.x), int(self.y), 5, 5)
@@ -79,9 +79,12 @@ class RocketWeapon:
                 self.show_deselect = False
 
             if self.selected and event.button == 1:
+                self.shoot(blocks, players, 0)
+            
+            elif event.button == 1:
                 self.shoot(blocks, players)
 
-    def shoot(self, blocks, players):
+    def shoot(self, blocks, players, gravity=0.4):
         if not self.player_ref:
             return
         mx, my = pygame.mouse.get_pos()
@@ -90,7 +93,7 @@ class RocketWeapon:
 
         angle = math.atan2((my - py), (mx - px))
         speed =15
-        rocket = RocketProjectile(px, py, angle, speed)
+        rocket = RocketProjectile(px, py, angle, speed, gravity)
         self.projectiles.append(rocket)
 
     def update(self, dt, blocks, players, maps):
