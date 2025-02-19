@@ -6,36 +6,26 @@ from src.game import game_loop
 global user_name
 
 def main_menu(screen):
-    #import local
     from src.options import options_menu
-    # Import background
-    menu_background = pygame.image.load("texture/menu/background.png")
+    menu_background = pygame.image.load("texture/menu/background2.png")
     menu_background = pygame.transform.scale(menu_background, (1920, 1080))
 
-    # Create a custom theme with transparent background
     custom_theme = pm.Theme(
-        background_color=(0, 0, 0, 0),  # Fully transparent
+        background_color=(0, 0, 0, 0),
         title=False,
         widget_offset=(0, 700),
         widget_margin=(0, 10),
         widget_font_color=(255, 165, 0),
     )
-
-    # Create the menu
     menu = pm.Menu('', 1920, 1080, theme=custom_theme, center_content=False)
 
     def start_game():
         menu_running = False
-        game_loop(screen)  # Démarre la boucle de jeu
-
-    # Add buttons to the menu
+        game_loop(screen, 2)
     menu.add.button('Play', start_game)
     menu.add.button('Options', lambda: options_menu(screen))
     menu.add.button('Quit', pm.events.EXIT, screen)
-
-    # Menu loop
     menu_running = True
-
     while menu_running:
         events = pygame.event.get()
         for event in events:
@@ -46,14 +36,8 @@ def main_menu(screen):
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     sys.exit()
-
-        # Draw the background first
         screen.blit(menu_background, (0, 0))
-
-        # Draw the menu (buttons on top of the background)
         if menu.is_enabled():
             menu.update(events)
             menu.draw(screen)
-
-        # Update the display
         pygame.display.flip()

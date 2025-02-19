@@ -11,18 +11,14 @@ def load_map(file_path):
         with open(file_path, "r") as file:
             lines = file.readlines()
             for line in lines:
-                # Supprimer les espaces ou sauts de ligne
                 line = line.strip()
 
-                # Ignorer les lignes vides
                 if not line:
                     continue
 
-                # Découper les paramètres
                 material, width, height, x, y = line.split(",")
                 width, height, x, y = int(width), int(height), int(x), int(y)
 
-                # Ajouter un dictionnaire représentant le bloc
                 blocks.append({
                     "material": material,
                     "width": width,

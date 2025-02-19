@@ -1,9 +1,8 @@
 import sys
 import pygame
-import time
-from .map_loader import *
-
-NUM_PLAYERS = 4 # Nombre de joueurs de 1 à 4
+from src.map_loader import *
+from src.player import *
+from src.weapon import *
 
 class DestructibleBlock:
     def __init__(self, material, width, height, x, y):
@@ -11,7 +10,8 @@ class DestructibleBlock:
         self.image = pygame.image.load(material).convert_alpha()
         self.image = pygame.transform.scale(self.image, (width, height))
         self.rect = pygame.Rect(x, y, width, height)
-        self.surface.blit(self.image, (0, 0))
+        self.surface.blit(self.image, (0, 0))      
+        self.mask = pygame.mask.from_surface(self.surface)
 
     def draw(self, screen):
         screen.blit(self.surface, self.rect.topleft)
@@ -19,115 +19,24 @@ class DestructibleBlock:
     def destroy_area(self, center, radius):
         local_center = (center[0] - self.rect.x, center[1] - self.rect.y)
         pygame.draw.circle(self.surface, (0, 0, 0, 0), local_center, radius)
+        self.mask = pygame.mask.from_surface(self.surface)
+        if self.mask.count() == 0:  
+            self.rect = pygame.Rect(self.rect.x, self.rect.y, 0, 0)
 
-class PlayerManager:
+def game_loop(screen, num_players):
+    from src.menu import main_menu
+    import time
 
-    controls = {
-        'left': pygame.K_q,
-        'right': pygame.K_d,
-        'jump': pygame.K_z
-    }
-
-    def get_controls(self):
-        return self.controls
-
-    colors = [
-        (255, 0, 0),    # Rouge
-        (0, 0, 255),    # Bleu
-        (0, 255, 0),    # Vert
-        (255, 255, 0),  # Jaune
-    ]
-    
-    def get_colors(self):
-        return self.colors
-    
-    def __init__(self, num_players):
-        self.players = []
-        screen_width = 1920
-
-        controls = self.get_controls()
-        colors = self.get_colors()
-
-        for i in range(num_players):
-            x_pos = (screen_width / (num_players + 1)) * (i + 1)
-            color = colors[i % len(colors)]
-            self.players.append(Player(x_pos, 300, color, controls))
-            
-        self.current_player_index = 0
-        self.last_switch = time.time()
-        self.turn_duration = 10
-        
-    def get_current_player(self):
-        return self.players[self.current_player_index]
-    
-    def get_list_players(self):
-        return self.players
-        
-    def update_turn(self):
-        current_time = time.time()
-        time_left = self.turn_duration - (current_time - self.last_switch)
-        
-        if time_left <= 0:
-            self.last_switch = current_time
-            self.current_player_index = (self.current_player_index + 1) % len(self.players)
-            
-        return time_left
-        
-    def draw_players(self, screen):
-        for player in self.players:
-            player.draw(screen)
-
-class Player:
-    def __init__(self, x, y, color, controls):
-        self.rect = pygame.Rect(x, y, 40, 40)
-        self.color = color
-        self.velocity_y = 0
-        self.is_jumping = False
-        self.controls = controls
-        self.base_speed = 150
-        self.jump_force = -400
-        self.gravity = 1200
-
-    def move(self, blocks, dt):
-        keys = pygame.key.get_pressed()
-        
-        if keys[self.controls['left']]:
-            self.rect.x -= self.base_speed * dt
-        if keys[self.controls['right']]:
-            self.rect.x += self.base_speed * dt
-            
-        if keys[self.controls['jump']] and not self.is_jumping:
-            self.velocity_y = self.jump_force
-            self.is_jumping = True
-
-    def gravityAndCollision(self, blocks, dt):
-        self.velocity_y += self.gravity * dt
-        self.rect.y += self.velocity_y * dt
-
-        for block in blocks:
-            if block.rect.colliderect(self.rect):
-                if self.velocity_y > 0:
-                    self.rect.bottom = block.rect.top
-                    self.velocity_y = 0
-                    self.is_jumping = False
-                elif self.velocity_y < 0:
-                    self.rect.top = block.rect.bottom
-                    self.velocity_y = 0
-
-    def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self.rect)
-
-def game_loop(screen):
-    from .menu import main_menu
-    
-    clock = pygame.time.Clock()
     game_background = pygame.image.load("texture/game/game_background.jpeg").convert_alpha()
     game_background = pygame.transform.scale(game_background, (1920, 1080))
-    
+
+    player_manager = PlayerManager(num_players, "texture/game/player_img.png")
+    all_players = player_manager.players
+
     map_file = "map/map.txt"
     map_data = load_map(map_file)
+
     maps = []
-    
     for block_data in map_data:
         maps.append(
             DestructibleBlock(
@@ -138,51 +47,51 @@ def game_loop(screen):
                 block_data["y"]
             )
         )
+    from src.weapon import RocketWeapon
+    rocket_weapon = RocketWeapon()
+    if all_players:
+        rocket_weapon.attach_to_player(all_players[0])
 
-    player_manager = PlayerManager(NUM_PLAYERS)
-    font = pygame.font.Font(None, 36)
+    clock = pygame.time.Clock()
 
     game_running = True
     while game_running:
-        dt = clock.tick(60) / 1000.0
-        
-        time_left = player_manager.update_turn()
-        current_player = player_manager.get_current_player()
+        dt_ms = clock.tick(60)
+        dt = dt_ms / 16.666
 
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-                for block in maps:
-                    if block.rect.collidepoint(mouse_pos):
-                        block.destroy_area(mouse_pos, radius=50)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     main_menu(screen)
+                if event.key == pygame.K_t:
+                    rocket_weapon.selected = False
+                    rocket_weapon.show_deselect = False
+                    player_manager.switch_turn()
+                    new_player = player_manager.get_current_player()
+                    rocket_weapon.attach_to_player(new_player)
 
-        current_player.move(maps, dt)
+            rocket_weapon.handle_event(event, maps, all_players)
 
-        for player in player_manager.get_list_players():
-            player.gravityAndCollision(maps, dt)
-        
+        current_player = player_manager.get_current_player()
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_q]:
+            current_player.move("left", maps)
+        if keys[pygame.K_d]:
+            current_player.move("right", maps)
+        if keys[pygame.K_SPACE]:
+            current_player.jump()
+
+        current_player.apply_gravity(maps)
+        rocket_weapon.update(dt, maps, all_players, maps)
+
         screen.blit(game_background, (0, 0))
-
+        player_manager.draw_players(screen)
         for block in maps:
             block.draw(screen)
-
-        player_manager.draw_players(screen)
-
-        # Affichage
-        time_text = font.render(f"Temps restant: {int(time_left)}s", True, (255, 255, 255))
-        player_text = font.render(
-            f"Tour du Joueur {player_manager.current_player_index + 1}", 
-            True, 
-            current_player.color
-        )
-        screen.blit(time_text, (10, 10))
-        screen.blit(player_text, (10, 50))
-
+        rocket_weapon.draw_ui(screen)
+        rocket_weapon.draw_projectiles(screen)
         pygame.display.update()
